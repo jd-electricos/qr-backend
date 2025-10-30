@@ -1,11 +1,10 @@
-// routes/uploadRoutes.js
-const express = require("express");
-const multer = require("multer");
-const { uploadImage } = require("../controllers/uploadController");
-
+const express = require('express');
 const router = express.Router();
-const upload = multer({ dest: "uploads/" });
+const multer = require('multer');
+const uploadController = require('../controllers/uploadController');
 
-router.post("/", upload.single("file"), uploadImage);
+const upload = multer({ dest: 'uploads/' }); // carpeta temporal
+
+router.post('/', upload.single('image'), uploadController.uploadImage);
 
 module.exports = router;

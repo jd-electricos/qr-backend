@@ -1,45 +1,47 @@
-const { google } = require('googleapis');
-const path = require('path');
+const imagekit = require('../services/imagekit');
 const fs = require('fs');
 
-const KEYFILEPATH = path.join(__dirname, '../config/japs-page-1730994915246-d40c675a31bc.json');
-const SCOPES = ['https://www.googleapis.com/auth/drive.file'];
-
-const auth = new google.auth.GoogleAuth({
-  keyFile: KEYFILEPATH,
-  scopes: SCOPES,
-});
-
-const drive = google.drive({ version: 'v3', auth });
-
 exports.uploadImage = async (req, res) => {
+  console.log('🟡 [Upload] Petición recibida para subir imagen.');
+
   try {
-    const fileMetadata = {
-      name: req.file.originalname,
-      parents: ['14Ff4b9_6Wjpv23XYEyJf_bf7sUsxo_QC'], // 👈 tu carpeta compartida
-    };
+    if (!req.file) {
+      console.log('🔴 [Upload] No se envió ningún archivo.');
+      return res.status(400).json({
+        success: false,
+        error: 'No se envió ninguna imagen'
+      });
+    }
 
-    const media = {
-      mimeType: req.file.mimetype,
-      body: fs.createReadStream(req.file.path),
-    };
+    console.log(`🟢 [Upload] Archivo recibido: ${req.file.originalname}`);
+    console.log('📦 [Upload] Leyendo archivo temporal...');
 
-    const response = await drive.files.create({
-      resource: fileMetadata,
-      media,
-      fields: 'id, webViewLink, webContentLink',
-      supportsAllDrives: true,
+    const file = req.file;
+    const fileBuffer = fs.readFileSync(file.path);
+
+    console.log('🚀 [Upload] Subiendo imagen a ImageKit...');
+
+    const response = await imagekit.upload({
+      file: fileBuffer,
+      fileName: file.originalname
     });
 
-    // Limpia el archivo temporal
-    fs.unlinkSync(req.file.path);
+    console.log('✅ [Upload] Imagen subida correctamente a ImageKit.');
+    console.log(`🌐 URL: ${response.url}`);
 
-    res.json({
+    fs.unlinkSync(file.path);
+    console.log('🧹 [Upload] Archivo temporal eliminado.');
+
+    return res.json({
       success: true,
-      file: response.data,
+      link: response.url,
+      name: response.name
     });
-  } catch (error) {
-    console.error('Error subiendo archivo:', error);
-    res.status(500).json({ error: error.message });
+  } catch (err) {
+    console.error('❌ [Upload] Error al subir imagen:', err);
+    return res.status(500).json({
+      success: false,
+      error: err.message || 'Error interno del servidor'
+    });
   }
 };
