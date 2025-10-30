@@ -17,13 +17,16 @@ exports.uploadImage = async (req, res) => {
     console.log('📦 [Upload] Leyendo archivo temporal...');
 
     const file = req.file;
+    const user = req.body.user || "Anonimo";
     const fileBuffer = fs.readFileSync(file.path);
 
     console.log('🚀 [Upload] Subiendo imagen a ImageKit...');
+    const customFileName = `${user}_${file.originalname}`;
+    console.log(`📝 [Upload] Nombre final del archivo: ${customFileName}`);
 
     const response = await imagekit.upload({
       file: fileBuffer,
-      fileName: file.originalname
+      fileName: customFileName
     });
 
     console.log('✅ [Upload] Imagen subida correctamente a ImageKit.');

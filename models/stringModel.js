@@ -18,6 +18,10 @@ const StringModel = sequelize.define('StringRecord', {
   string: {
     type: DataTypes.TEXT,
     allowNull: false
+  },
+  user: {
+    type: DataTypes.TEXT,
+    allowNull: false
   }
 }, {
   tableName: 'strings',
